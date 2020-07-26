@@ -1,3 +1,7 @@
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     match args.len() {
@@ -17,7 +21,67 @@ fn usage() {
 
 fn parse_markdown_file(_filename: &str) {
     print_short_banner();
-    println!("[ INFO ] Trying to parse {}...", _filename);
+    println!("[ INFO ] Starting parser!");
+    let input_filename = Path::new(_filename);
+    let file = match File::open(&input_filename) {
+        Err(err) => panic!("Couldn't open file: {}", err),
+        Ok(value) => value,
+    };
+
+    let mut _ptag: bool = false;
+    let mut _htag: bool = false;
+
+    let mut tokens: Vec<String> = Vec::new();
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let line_contents = line.unwrap();
+        let mut output_line = String::new();
+        let mut first_char: Vec<char> = line_contents.chars().take(1).collect();
+        match first_char.pop() {
+            Some('#') => {
+                if _ptag {
+                    _ptag = false;
+                    output_line.push_str("</p>\n");
+                }
+
+                if _htag {
+                    _htag = false;
+                    output_line.push_str("</h1>\n");
+                }
+
+                _htag = true;
+                let mut next_str = String::from("\n\n<h1>");
+                next_str.push_str(&line_contents[2..]);
+                output_line.push_str(&next_str);
+            }
+            _ => {
+                if !_ptag {
+                    _ptag = true;
+                    output_line.push_str("<p>");
+                }
+                output_line.push_str(&line_contents);
+            }
+        }
+
+        if _ptag {
+            _ptag = false;
+            output_line.push_str("</p>\n");
+        }
+
+        if _htag {
+            _htag = false;
+            output_line.push_str("</h1>\n");
+        }
+
+        if output_line != "<p></p>\n" {
+            tokens.push(output_line);
+        }
+    }
+
+    for t in tokens {
+        println!("{}", t);
+    }
 }
 
 fn print_short_banner() {
