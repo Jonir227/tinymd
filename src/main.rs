@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io::Write;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
@@ -6,7 +7,9 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     match args.len() {
         2 => {
-            parse_markdown_file(&args[1]);
+            let parsed_str: Vec<String> = parse_markdown_file(&args[1]);
+            write_markdown_file(&args[1], parsed_str);
+            println!("[ INFO ] Parsing complete!");
         }
         _ => {
             println!("[ ERROR ] Invalid invocation (you done goofed!)");
@@ -19,7 +22,7 @@ fn usage() {
     print_long_banner();
 }
 
-fn parse_markdown_file(_filename: &str) {
+fn parse_markdown_file(_filename: &str) -> Vec<String> {
     print_short_banner();
     println!("[ INFO ] Starting parser!");
     let input_filename = Path::new(_filename);
@@ -79,8 +82,18 @@ fn parse_markdown_file(_filename: &str) {
         }
     }
 
-    for t in tokens {
-        println!("{}", t);
+    tokens
+}
+
+fn write_markdown_file(_filename: &str, _parsed_str: Vec<String>) {
+    let mut output_filename = String::from(&_filename[.._filename.len() - 3]);
+    output_filename.push_str(".html");
+    let mut outfile =
+        File::create(output_filename).expect("[ ERROR ] Could not create output file!");
+    for line in &_parsed_str {
+        outfile
+            .write_all(line.as_bytes())
+            .expect("[ ERROR ] Could not write to output file!");
     }
 }
 
