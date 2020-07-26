@@ -3,11 +3,7 @@ fn main() {
 }
 
 fn usage() {
-    let version = get_version();
+    let the_version: &str = "0.1";
     println!("tinymd, a markdown compiler written by Jonir227");
-    println!("Version: {}", version);
-}
-
-fn get_version() -> u16 {
-    1
+    println!("Version: {}", the_version);
 }
